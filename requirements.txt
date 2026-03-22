@@ -1,0 +1,4 @@
+# Install PyTorch with CUDA for your driver; see https://pytorch.org/get-started/locally/
+torch>=2.1.0
+numpy>=1.24.0
+pyyaml>=6.0

@@ -1,0 +1,3 @@
+GPU clusters schedule workloads across many accelerators. Mixed precision and gradient checkpointing trade compute for memory.
+Distributed training uses data parallel, tensor parallel, and pipeline parallel strategies. NCCL implements collective operations over NVLink and InfiniBand RDMA paths.
+The goal is high throughput, low latency, and good scaling efficiency when the model and cluster grow.
