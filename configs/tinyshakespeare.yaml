@@ -1,0 +1,26 @@
+model:
+  block_size: 128
+  vocab_size: 0
+  n_layer: 4
+  n_head: 4
+  n_embd: 256
+  dropout: 0.1
+
+train:
+  batch_size: 16
+  grad_accum_steps: 4
+  max_iters: 400
+  learning_rate: 3.0e-4
+  weight_decay: 0.1
+  warmup_iters: 100
+  grad_clip: 1.0
+  use_amp: true
+  use_checkpointing: true
+  seed: 42
+
+data:
+  train_path: data/tinyshakespeare.txt
+
+logging:
+  log_interval: 25
+  eval_interval: 200

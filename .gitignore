@@ -1,5 +1,7 @@
 runs/
-artifacts/
+artifacts/*
+!artifacts/train_curve_tinyshakespeare.png
+!artifacts/triton_model_repo_layout.png
 results/
 __pycache__/
 *.py[cod]
