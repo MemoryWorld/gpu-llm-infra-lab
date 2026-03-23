@@ -36,7 +36,7 @@ def bench_amp_mlp(device: torch.device, hidden: int = 2048, batch: int = 512) ->
         y = (x @ w1).relu() @ w2
 
     def run_amp() -> None:
-        with torch.cuda.amp.autocast(dtype=torch.float16):
+        with torch.amp.autocast("cuda", dtype=torch.float16):
             y = (x @ w1).relu() @ w2
         _ = y
 

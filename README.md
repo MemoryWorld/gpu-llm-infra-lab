@@ -4,25 +4,25 @@
 
 ## 本机实测记录（可复现）
 
-以下数据在 **2026-03-23** 于本仓库目录下 **真实跑通**（命令见各小节）。硬件信息来自 `nvidia-smi`；当次 Python 环境为 **3.13.8**，因 **PyTorch CUDA 轮子约 2.5GB** 在自动化拉取时多次超时，实测使用的是 **`torch 2.10.0+cpu`**，故训练与部分基准在 **CPU** 上完成。**同一台机器已安装 RTX 2060（驱动 591.59）**；你在本机执行 `pip uninstall torch -y` 后安装 [CUDA 12.4 版 PyTorch](https://pytorch.org/get-started/locally/) 再跑 `bench_gpu` / `train`，即可得到 **GPU** 上的吞吐与 FP16 数据。
+以下数据在 **2026-03-23** 于本仓库目录下 **真实跑通**（命令见各小节）。硬件信息来自 `nvidia-smi`，设备为 **RTX 2060 (6GB)**，驱动 **591.59**。
 
 | 项目 | 结果 |
 |------|------|
 | GPU（查询） | NVIDIA GeForce RTX 2060，驱动 **591.59**，显存 **6144 MiB** |
-| Python / PyTorch | **3.13.8** / **2.10.0+cpu**（`torch.cuda.is_available()` = false） |
-| `bench_gpu`（无 CUDA 时走 CPU） | `1024×1024` matmul FP32：**~5.39 ms/iter**，约 **0.40 TFLOP/s** |
-| `bench_collectives`（单进程） | 约 **50M** float 元素本地归约模拟：**~66.8 ms/iter** |
+| Python / PyTorch | **3.13.8** / CUDA 可用（`bench_gpu` 已识别 `NVIDIA GeForce RTX 2060`） |
+| `bench_gpu`（GPU） | `4096×4096` FP16：**~7.49 ms** / **~18.36 TFLOP/s**；FP32：**~27.13 ms** / **~5.07 TFLOP/s**；MLP fp32：**~7.18 ms**，AMP fp16：**~2.67 ms** |
+| `bench_collectives`（单进程） | 约 **50M** float 元素本地归约模拟：**~66.8 ms/iter**（通信脚本单进程 baseline） |
 | `scheduler_sim --gpus 4` | FIFO makespan **2.11 h**，按显存贪心 **2.00 h** |
-| `train`（`--max-iters 80`，CPU） | iter **0** loss **3.84**，iter **50** loss **~1.98**；吞吐约 **4.0k tokens/s**（含日志开销） |
+| `train`（`--max-iters 120`，GPU） | iter **0** loss **3.84**；iter **50** loss **~1.96**；iter **100** loss **~1.18**；吞吐约 **65k~67k tokens/s** |
 | `export_onnx` | **`artifacts/tiny_gpt.onnx`**，`onnx.checker` **通过**；文件约 **12.4 MiB**（`artifacts/` 已 gitignore，本地生成） |
-| `infer_quant`（CPU，`--steps 80`） | FP32 **~6.0 ms/forward**；动态量化 Linear **~8.0 ms/forward**（小模型量化开销可见） |
+| `infer_quant`（CPU，`--steps 100`） | FP32 **~5.73 ms/forward**；动态量化 Linear **~7.05 ms/forward**（小模型量化开销可见） |
 
-一键复现（项目根目录，已 `pip install -e . onnx` 且为 CPU 版 torch 时）：
+一键复现（项目根目录，已 `pip install -e . onnx`）：
 
 ```bash
-python -u -m gpu_llm_infra_lab.train --max-iters 80 --config configs/default.yaml --out_dir runs/readme_run
-python -m gpu_llm_infra_lab.export_onnx --ckpt runs/readme_run/ckpt_final.pt --out artifacts/tiny_gpt.onnx
-python -m gpu_llm_infra_lab.infer_quant --ckpt runs/readme_run/ckpt_final.pt --steps 80
+python -u -m gpu_llm_infra_lab.train --max-iters 120 --config configs/default.yaml --out_dir runs/gpu_run
+python -m gpu_llm_infra_lab.export_onnx --ckpt runs/gpu_run/ckpt_final.pt --out artifacts/tiny_gpt.onnx
+python -m gpu_llm_infra_lab.infer_quant --ckpt runs/gpu_run/ckpt_final.pt --steps 100
 python -m gpu_llm_infra_lab.bench_gpu
 python -m gpu_llm_infra_lab.bench_collectives
 python -m gpu_llm_infra_lab.scheduler_sim --gpus 4
