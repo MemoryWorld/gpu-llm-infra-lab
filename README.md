@@ -40,6 +40,8 @@ python -m gpu_llm_infra_lab.export_onnx --ckpt runs/tinyshakespeare_300/ckpt_fin
 python -m gpu_llm_infra_lab.infer_ort --onnx artifacts/tiny_gpt.onnx --ckpt runs/tinyshakespeare_300/ckpt_final.pt --seq 128 --steps 100
 ```
 
+**Local reference (Tiny Shakespeare checkpoint, `CPUExecutionProvider`):** ~**3.87 ms/run** (mean of 100 runs after default warmup; `seq=128`, batch=1). Your numbers will vary by CPU and ORT build.
+
 Use `--cuda` if you installed GPU-enabled ONNX Runtime and want `CUDAExecutionProvider`.
 
 ## Public Dataset
