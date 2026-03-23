@@ -16,6 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 onnx = ["onnx>=1.14.0"]
+ort = ["onnxruntime>=1.16.0"]
 viz = ["matplotlib>=3.8.0"]
 
 [project.scripts]

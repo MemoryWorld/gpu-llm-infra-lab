@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -e .
+          pip install "onnx>=1.14" "onnxruntime>=1.16" pyyaml
+
+      - name: Smoke train (CPU)
+        run: |
+          python -u -m gpu_llm_infra_lab.train --config configs/ci_smoke.yaml --out_dir runs/ci_smoke
+
+      - name: Export ONNX
+        run: |
+          mkdir -p artifacts
+          python -m gpu_llm_infra_lab.export_onnx \
+            --ckpt runs/ci_smoke/ckpt_final.pt \
+            --out artifacts/ci_smoke.onnx \
+            --static
+
+      - name: ONNX Runtime benchmark
+        run: |
+          python -m gpu_llm_infra_lab.infer_ort \
+            --onnx artifacts/ci_smoke.onnx \
+            --ckpt runs/ci_smoke/ckpt_final.pt \
+            --seq 64 \
+            --steps 40 \
+            --warmup 10

@@ -1,0 +1,27 @@
+# Tiny config for GitHub Actions CPU smoke (train -> export -> ORT).
+model:
+  block_size: 64
+  vocab_size: 0
+  n_layer: 2
+  n_head: 2
+  n_embd: 128
+  dropout: 0.0
+
+train:
+  batch_size: 4
+  grad_accum_steps: 1
+  max_iters: 6
+  learning_rate: 3.0e-4
+  weight_decay: 0.1
+  warmup_iters: 2
+  grad_clip: 1.0
+  use_amp: false
+  use_checkpointing: false
+  seed: 42
+
+data:
+  train_path: data/sample_corpus.txt
+
+logging:
+  log_interval: 1
+  eval_interval: 99999

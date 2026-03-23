@@ -1,5 +1,7 @@
 # GPU / LLM Infra Lab
 
+[![CI](https://github.com/MemoryWorld/gpu-llm-infra-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/MemoryWorld/gpu-llm-infra-lab/actions/workflows/ci.yml)
+
 Compact experiments for model training, inference export, and distributed-systems baselines on commodity hardware.
 
 ## What Is Included
@@ -9,6 +11,7 @@ Compact experiments for model training, inference export, and distributed-system
 - `bench_gpu.py`: FP16/FP32 matmul and MLP throughput micro-benchmarks.
 - `bench_collectives.py`: collective communication baseline (`all_reduce` or local reduction fallback).
 - `export_onnx.py`: ONNX export path for TensorRT / Triton serving pipelines.
+- `infer_ort.py`: ONNX Runtime latency benchmark (CPU or CUDA EP).
 - `infer_quant.py`: dynamic quantization latency comparison on CPU.
 - `scheduler_sim.py`: simple scheduler policy simulation (FIFO vs greedy packing).
 
@@ -21,8 +24,23 @@ python -m venv .venv
 pip install -U pip
 pip install torch --index-url https://download.pytorch.org/whl/cu124
 pip install -e .
-pip install onnx matplotlib
+pip install onnx onnxruntime matplotlib
 ```
+
+## CI
+
+On every push/PR to `main`, GitHub Actions runs a CPU smoke pipeline: `configs/ci_smoke.yaml` train → `export_onnx --static` → `infer_ort`. See [.github/workflows/ci.yml](.github/workflows/ci.yml).
+
+## ONNX Runtime inference
+
+After exporting ONNX, benchmark latency without TensorRT:
+
+```bash
+python -m gpu_llm_infra_lab.export_onnx --ckpt runs/tinyshakespeare_300/ckpt_final.pt --out artifacts/tiny_gpt.onnx
+python -m gpu_llm_infra_lab.infer_ort --onnx artifacts/tiny_gpt.onnx --ckpt runs/tinyshakespeare_300/ckpt_final.pt --seq 128 --steps 100
+```
+
+Use `--cuda` if you installed GPU-enabled ONNX Runtime and want `CUDAExecutionProvider`.
 
 ## Public Dataset
 
