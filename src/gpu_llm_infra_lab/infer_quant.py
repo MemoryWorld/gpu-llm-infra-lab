@@ -8,23 +8,21 @@ import time
 import torch
 import torch.nn as nn
 
-from .ckpt_utils import state_dict_for_plain_tinygpt
-from .data_loader import load_corpus
+from .ckpt_utils import state_dict_for_plain_tinygpt, vocab_size_from_checkpoint
 from .tiny_gpt import TinyGPT
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--ckpt", type=str, required=True)
-    parser.add_argument("--corpus", type=str, default="data/sample_corpus.txt")
     parser.add_argument("--steps", type=int, default=200)
     args = parser.parse_args()
 
-    tok, _ = load_corpus(args.corpus)
     ckpt = torch.load(args.ckpt, map_location="cpu")
     cfg = ckpt["config"]
     mcfg = cfg["model"]
-    vocab_size = mcfg.get("vocab_size") or tok.vocab_size
+    cfg_vs = mcfg.get("vocab_size") or 0
+    vocab_size = int(cfg_vs) if int(cfg_vs) > 0 else vocab_size_from_checkpoint(ckpt["model"])
 
     model = TinyGPT(
         vocab_size=vocab_size,
